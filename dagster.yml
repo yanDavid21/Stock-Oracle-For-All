@@ -1,0 +1,27 @@
+vscheduler:
+    module: dagster.core.scheduler
+    class: DagsterDaemonScheduler
+
+run_coordinator:
+    module: dagster.core.run_coordinator
+    class: QueuedRunCoordinator
+
+compute_logs:
+    module: dagster_aws.s3.compute_log_manager
+    class: S3ComputeLogManager
+    config:
+        bucket: "dev-osverse"
+        prefix: "dev-compute-log"
+
+storage:
+    postgres:
+        postgres_db:
+            username: "postgres"
+            password: "password"
+            hostname: "127.0.0.1"
+            db_name: "postgres"
+            port: 5433
+
+sensors:
+    use_threads: true
+    num_workers: 8
