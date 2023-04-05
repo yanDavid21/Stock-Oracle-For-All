@@ -1,3 +1,4 @@
 from .category import *
-from .job import *
+from .jobs import *
 from .ops import *
+from .schedules import *

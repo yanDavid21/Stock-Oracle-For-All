@@ -33,7 +33,7 @@ class BaseAdapterJob(BaseCategorizedJob):
         adapter_op = self.adapter_op_factory().create_op(category=self.category)
 
         @job(
-            name=build_id(provider=self.provider, identifier=f"ADAPTER_{self.category}_stock_job"),
+            name=build_id(provider=self.provider, identifier=f"{self.category}_stock_job"),
             resource_defs=self.resource_defs,
             **kwargs,
         )
