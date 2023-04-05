@@ -2,4 +2,4 @@ from strenum import StrEnum
 
 
 class YHFinanceApiCategory(StrEnum):
-    ALL = "all"
+    LATEST_PRICE = "latest_price"

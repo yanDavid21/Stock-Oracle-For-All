@@ -3,16 +3,16 @@ from typing import Any, Dict, List, Optional, Set, Union
 from dagster import OpDefinition, get_dagster_logger, op
 
 from mercury._utils import CategoryKeyError, build_id
-from mercury.adapters.yh_finance_api import YHFinanceApiCategory
+from mercury.adapters.yahoo_finance_api import YahooFinanceApiCategory
 from mercury.base.base_op import BaseCategorizedOp, BaseCategorizedOpFactory
 from mercury.base.config.providers import Provider
 
 
-class YHFinanceLatestPriceOp(BaseCategorizedOp):
+class YahooFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
     def __init__(
         self,
-        category: YHFinanceApiCategory,
-        provider: Provider = Provider.YH_FINANCE_API,
+        category: YahooFinanceApiCategory,
+        provider: Provider = Provider.YAHOO_FINANCE_API,
         required_resource_keys: Optional[Set[str]] = None,
         config_schema: Optional[Union[Dict[str, Any], List]] = None,
     ) -> None:
@@ -33,11 +33,10 @@ class YHFinanceLatestPriceOp(BaseCategorizedOp):
         return _op
 
 
-class YHFinanceApiOpFactory(BaseCategorizedOpFactory):
-    def create_op(self, category: YHFinanceApiCategory, **kwargs) -> OpDefinition:
+class YahooFinanceApiFetchLatestPriceOpFactory(BaseCategorizedOpFactory):
+    def create_op(self, category: YahooFinanceApiCategory, **kwargs) -> OpDefinition:
         try:
-            category = YHFinanceApiCategory[category.upper()]
+            category = YahooFinanceApiCategory[category.upper()]
         except KeyError as key_err:
-            raise CategoryKeyError(YHFinanceApiCategory) from key_err
-        fetch_latest_price_op = YHFinanceLatestPriceOp(category).build(**kwargs)
-        return fetch_latest_price_op
+            raise CategoryKeyError(YahooFinanceApiCategory) from key_err
+        return YahooFinanceApiFetchLatestPriceOp(category).build(**kwargs)

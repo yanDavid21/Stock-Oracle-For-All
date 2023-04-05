@@ -2,4 +2,4 @@ from strenum import StrEnum
 
 
 class YahooFinanceApiCategory(StrEnum):
-    ALL = "all"
+    LATEST_PRICE = "latest_price"
