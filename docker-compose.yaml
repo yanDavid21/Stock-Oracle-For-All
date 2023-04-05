@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+    redis_1:
+        image: "redis:alpine"
+        ports:
+            - "6379:6379"
+    redis_2:
+        image: "redis:alpine"
+        ports:
+            - "6380:6380"
+    redis_3:
+        image: "redis:alpine"
+        ports:
+            - "6381:6381"
+    mongo:
+        image: "mongo:4.4"
+        ports:
+            - "27017:27017"
+    gateway:
+        build: "./gateway"
+        image: "gateway:latest"
+        ports:
+            - "3000:3000"
+    web:
+        build: "./web_server"
+        image: "web:latest"
+        ports:
+            - "8080:8080"
