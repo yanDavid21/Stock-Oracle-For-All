@@ -31,8 +31,8 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
         headers = {"X-RapidAPI-Key": key,
             "X-RapidAPI-Host": "real-time-finance-data.p.rapidapi.com"}
         querystring = {"symbol": ticker,"language":"en"}
-        response = requests.request("GET", page_url, headers=headers)
-        price = response.jspon()['data']['price']
+        response = requests.request("GET", page_url, headers=headers, params=querystring)
+        price = response.json()['data']['price']
         get_dagster_logger().info('Finish crawling!')
         return f"{ticker}:{price}"    
 
@@ -44,10 +44,9 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
             **kwargs,
         )
         def _op():
-            # Main log to fetch data from data srouce goes here
-            data = ""
-            get_dagster_logger().log(data)
-
+            # Main log to fetch data from data source goes here
+            return self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", "NFLX")
+        
         return _op
 
 
