@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional, Set, Union
-
+from gateway.server import RedisStockAPI
 from dagster import OpDefinition, OpExecutionContext, get_dagster_logger, op
 import requests
 import redis
@@ -43,10 +43,13 @@ class YahooFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
             required_resource_keys=self.required_resource_keys,
             **kwargs,
         ) 
-        def _op(context) -> str:
+        def _op():
 
             # Main log to fetch data from data source goes here
-            return self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", "NFLX")
+            price = self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", "NFLX")
+            redis = RedisStockAPI()
+            redis.publish_stock(self.provider, price)
+            
 
         return _op
 
