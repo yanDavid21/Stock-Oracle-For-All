@@ -4,13 +4,14 @@ from dagster import OpDefinition, get_dagster_logger, op
 import json
 from datetime import datetime
 import requests
+from mercury._utils.stock_list import StockList
 from mercury._utils import CategoryKeyError, PhantomOp, build_id
 from mercury.adapters.yh_finance_api import YHFinanceApiCategory
 from mercury.base.base_op import BaseCategorizedOp, BaseCategorizedOpFactory
 from mercury.base.config.providers import Provider
 
 
-class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
+class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp, StockList):
     def __init__(
         self,
         category: YHFinanceApiCategory,
@@ -19,6 +20,7 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
         config_schema: Optional[Union[Dict[str, Any], List]] = None,
     ) -> None:
         super().__init__(category, provider, required_resource_keys, config_schema)
+        self.list_stock = StockList().data
 
     def _get_price(self, key: str, ticker: str) -> str:
         """Crawl price data from API operation
@@ -31,7 +33,7 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
         current_time = datetime.now() \
             .replace(hour=datetime.now().hour, minute=0, second=0, microsecond=0) \
                 .strftime('%Y-%m-%d %H:%M:%S')
-        get_dagster_logger().info('Begin crawling...')
+        get_dagster_logger().info(f'Begin crawling for {ticker}...')
         page_url = "https://real-time-finance-data.p.rapidapi.com/stock-quote"
         headers = {"X-RapidAPI-Key": key,
             "X-RapidAPI-Host": "real-time-finance-data.p.rapidapi.com"}
@@ -42,7 +44,7 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
                                 "price": price,
                                 "datetime": current_time,}
                                 )
-        get_dagster_logger().info('Finish crawling!')
+        get_dagster_logger().info(f'Finish crawling for {ticker}!')
         return message
 
     def build(self, **kwargs) -> OpDefinition:
@@ -53,11 +55,12 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
             **kwargs,
         )
         def _op():
-            # Main log to fetch data from data source goes here
-            price = self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", "NFLX")           
             redis = RedisStockAPI()
-            redis.publish_stock(self.provider, price)
-        
+            for stock in self.list_stock:
+            # Main log to fetch data from data source goes here
+                price = self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", stock)
+                redis.publish_stock(self.provider, price)
+            
         return _op
 
 
