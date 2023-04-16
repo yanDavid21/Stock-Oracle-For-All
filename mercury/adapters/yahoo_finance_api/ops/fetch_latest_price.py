@@ -1,8 +1,8 @@
 from typing import Any, Dict, List, Optional, Set, Union
 from gateway.server import RedisStockAPI
-from dagster import OpDefinition, OpExecutionContext, get_dagster_logger, op
+from dagster import OpDefinition, get_dagster_logger, op
 import requests
-import redis
+from datetime import datetime
 from mercury._utils import CategoryKeyError, build_id
 from mercury.adapters.yahoo_finance_api import YahooFinanceApiCategory
 from mercury.base.base_op import BaseCategorizedOp, BaseCategorizedOpFactory
@@ -27,14 +27,21 @@ class YahooFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
             headers (str): the key for your api
             ticker (str): the stock ticker
         Returns: the current price of the stock ticker"""
+        current_time = datetime.now() \
+            .replace(hour=datetime.now().hour, minute=0, second=0, microsecond=0) \
+                .strftime('%Y-%m-%d %H:%M:%S')
         get_dagster_logger().info('Begin crawling...')
         page_url = f"https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote/{ticker}/financial-data"
         headers = {"X-RapidAPI-Key": key,
             "X-RapidAPI-Host": "yahoo-finance15.p.rapidapi.com"}
         response = requests.request("GET", page_url, headers=headers)
         price = response.json()['financialData']['currentPrice']['raw']
+        message = json.dumps({"ticker": ticker,
+                        "price": price,
+                        "datetime": current_time,}
+                        )
         get_dagster_logger().info('Finish crawling!')
-        return f"{ticker}:{price}"
+        return message
 
     def build(self, **kwargs) -> OpDefinition:
         @op(
