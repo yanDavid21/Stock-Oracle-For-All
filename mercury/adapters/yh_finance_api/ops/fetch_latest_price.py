@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Optional, Set, Union
 from gateway.server import RedisStockAPI
 from dagster import OpDefinition, get_dagster_logger, op
+import json
+from datetime import datetime
 import requests
 from mercury._utils import CategoryKeyError, PhantomOp, build_id
 from mercury.adapters.yh_finance_api import YHFinanceApiCategory
@@ -26,6 +28,9 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
             headers (str): the key for your api
             ticker (str): the stock ticker
         Returns: the current price of the stock ticker"""
+        current_time = datetime.now() \
+            .replace(hour=datetime.now().hour, minute=0, second=0, microsecond=0) \
+                .strftime('%Y-%m-%d %H:%M:%S')
         get_dagster_logger().info('Begin crawling...')
         page_url = "https://real-time-finance-data.p.rapidapi.com/stock-quote"
         headers = {"X-RapidAPI-Key": key,
@@ -33,8 +38,12 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
         querystring = {"symbol": ticker,"language":"en"}
         response = requests.request("GET", page_url, headers=headers, params=querystring)
         price = response.json()['data']['price']
+        message = json.dumps({"ticker": ticker,
+                                "price": price,
+                                "datetime": current_time,}
+                                )
         get_dagster_logger().info('Finish crawling!')
-        return f"{ticker}:{price}"    
+        return message
 
     def build(self, **kwargs) -> OpDefinition:
         @op(
@@ -45,7 +54,7 @@ class YHFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
         )
         def _op():
             # Main log to fetch data from data source goes here
-            price = self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", "NFLX")
+            price = self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", "NFLX")           
             redis = RedisStockAPI()
             redis.publish_stock(self.provider, price)
         
