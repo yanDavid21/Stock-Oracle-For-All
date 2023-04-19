@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional, Set, Union
-from gateway.server import RedisStockAPI
+from redis.api import RedisStockAPI
 from dagster import OpDefinition, get_dagster_logger, op
 import requests
 import json
@@ -21,10 +21,10 @@ class YahooFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
     ) -> None:
         super().__init__(category, provider, required_resource_keys, config_schema)
         self.list_stock = StockList().data,
-    
+
     def _get_price(self, key: str, ticker: str) -> str:
         """Crawl price data from API operation
-        
+
         Args:
             page_url (str): the url link of the api
             headers (str): the key for your api
@@ -32,17 +32,17 @@ class YahooFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
         Returns: the current price of the stock ticker"""
         current_time = datetime.now() \
             .replace(hour=datetime.now().hour, minute=0, second=0, microsecond=0) \
-                .strftime('%Y-%m-%d %H:%M:%S')
+            .strftime('%Y-%m-%d %H:%M:%S')
         get_dagster_logger().info('Begin crawling...')
         page_url = f"https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote/{ticker}/financial-data"
         headers = {"X-RapidAPI-Key": key,
-            "X-RapidAPI-Host": "yahoo-finance15.p.rapidapi.com"}
+                   "X-RapidAPI-Host": "yahoo-finance15.p.rapidapi.com"}
         response = requests.request("GET", page_url, headers=headers)
         price = response.json()['financialData']['currentPrice']['raw']
         message = json.dumps({"ticker": ticker,
-                        "price": price,
-                        "datetime": current_time,}
-                        )
+                              "price": price,
+                              "datetime": current_time, }
+                             )
         get_dagster_logger().info('Finish crawling!')
         return message
 
@@ -52,14 +52,13 @@ class YahooFinanceApiFetchLatestPriceOp(BaseCategorizedOp):
             config_schema=self.config_schema,
             required_resource_keys=self.required_resource_keys,
             **kwargs,
-        ) 
+        )
         def _op():
             redis = RedisStockAPI()
             for stock in self.list_stock:
-            # Main log to fetch data from data source goes here
+                # Main log to fetch data from data source goes here
                 price = self._get_price("70f59a384fmsh1cfc6e9694781c3p1107f5jsna9f6206b0c3d", stock)
                 redis.publish_stock(self.provider, price)
-            
 
         return _op
 

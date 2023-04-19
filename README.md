@@ -43,3 +43,9 @@ To write the packages version into `requirements.txt`, run the command
 ```
 make sync
 ```
+
+# Set up
+
+1. install Docker and docker-compose
+1. set active directory to project root
+1. docker-compose up
