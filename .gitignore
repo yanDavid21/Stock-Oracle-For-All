@@ -6,6 +6,9 @@
 /output
 **/tmp*
 
+
+node_modules
+
 # Jupiter notebooks
 .ipynb_checkpoints
 

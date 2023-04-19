@@ -19,4 +19,4 @@ services:
         build: "./web_server"
         image: "web:latest"
         ports:
-            - "8080:8080"
+            - "5000:5000"
